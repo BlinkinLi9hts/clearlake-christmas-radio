@@ -1,0 +1,62 @@
+# -- Secrets / credentials (NEVER commit) -------------------------
+.env
+.env.*
+!.env.example
+*.local
+secrets/
+config.local.*
+# AzuraCast / Plex / Castopod API keys, streamer creds, auth tokens
+*api-key*
+*apikey*
+*.pem
+*.key
+*.crt
+
+# -- Node / app build ---------------------------------------------
+node_modules/
+dist/
+build/
+.cache/
+.parcel-cache/
+*.tsbuildinfo
+coverage/
+
+# -- Capacitor / native -------------------------------------------
+.gradle/
+android/app/build/
+android/.idea/
+ios/App/build/
+ios/App/Pods/
+DerivedData/
+*.ipa
+*.apk
+*.aab
+*.keystore
+
+# -- PWA / bundler output -----------------------------------------
+.vite/
+.next/
+sw.js.map
+
+# -- Media (do not track the library in git) ----------------------
+media/
+library/
+*.mp3
+*.flac
+*.m4a
+*.wav
+*.ogg
+
+# -- OS / editor cruft --------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*~
+.vscode/
+.idea/
+
+# -- Logs ---------------------------------------------------------
+*.log
+logs/
+npm-debug.log*
