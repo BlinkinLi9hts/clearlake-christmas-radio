@@ -78,3 +78,21 @@ Architecture is fully locked (see `DECISIONS.md`). Nothing built yet. The repo +
 - Write docs via the filesystem MCP tools (they reach the host); the native file tools land in a sandbox and won't appear in the repo.
 - Cutover from Zeno is a repoint of BUTT — a swap, not a rebuild. The scary part (bandwidth, exposure) is already de-risked by the 950 pipe + existing NginxProxyManager.
 - Resell/SaaS path is preserved via a P3 forward-compat line (keep auth multi-tenant-capable). Strategy itself lives in Business Claude.
+
+
+## Commit & Push -- Master Watcher (added 2026-07-30)
+
+Auto commit + push for this repo is handled by the **Master Projects Watcher**
+(`C:\\Projects\\_watcher\\master-watch.ps1`, launched at logon), which watches every
+git repo under `C:\\Projects`. The old per-repo watchers are retired.
+
+- On save, after ~8s of quiet: `git add -A` -> `git commit -m "auto: <timestamp>"` -> `git push`.
+- One shared tray icon; this repo shows its own colored/lettered icon + a repo-named
+  toast on each push. Activity log: `C:\\Projects\\_watcher\\master-watch.log`.
+- Guards: skips while a manual git op is in progress (merge/rebase/lock); unstages +
+  warns on any file over 25MB (never auto-pushes large/secret blobs); recovers on buffer overflow.
+- Routine edits need no manual git. Still make intentional manual commits for milestones
+  -- the `auto:` commits are a safety net, not a substitute for real history.
+- Shared standards: this repo's root `CLAUDE.md` imports `C:\\Projects\\_shared\\Claude.md`.
+
+> Note: this repo has **no live deploy yet** (still P0) -- pushes just back it up to GitHub; nothing goes live.
