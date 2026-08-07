@@ -5,12 +5,15 @@
 
 **What this is:** Brian's self-hosted internet radio station + companion app, replacing Zeno FM (which raised rates), owned end to end. The **station is personal/standalone** (this repo). A **white-label version of the app is a separate BlinkinLights Studio SaaS product** — that money/GTM side is tracked in the *Business Claude* project, NOT here.
 
+**⚠️ COLD-START WARNING — Knowledge cache is stale. Filesystem MCP is truth.**
+The knowledge source `memory.md` injected at session start is a background summary only — it does NOT reflect current phase, recent decisions, or session state. Always read the live repo docs via the filesystem MCP first. The `memory.md` is orientation context, not a substitute for the docs below.
+
 **Do this first, before responding:**
 1. Read in order: `PROJECT_INSTRUCTIONS.md` → `SESSION_LOG.md` (top entry) → `BACKLOG.md` → `DECISIONS.md` → the rest of this file.
 2. Post the ready confirmation (format below). Ask nothing until it's posted.
 
 ```
-Good morning Brian.
+Good [morning/evening] Brian.
 
 Project: Clearlake Christmas Radio
 Phase: PX — [name] ([status])
@@ -35,23 +38,29 @@ Unraid homelab (TS440, 32 GB, 950 symmetric) → **Ubuntu VM** (`azuracast`, `10
 
 **Date:** 2026-08-07
 **Phase:** P1 — Exposure (not started)
-**Last session:** P0 complete — Ubuntu VM + AzuraCast installed, station streaming on LAN, P0 gate passed.
+**Last session:** P2 partial — music library imported (614 files). AutoDJ not a priority; ZaraRadio remains the playout brain. BUTT repoint (Zeno cutover) still pending.
 
 ---
 
 ## Where We Are
 
-AzuraCast is live on the LAN. P0 gate passed. The existing Zeno/ZaraRadio/FM setup is still running — we have not touched it.
+AzuraCast is live on the LAN. P0 gate passed. Music library imported. The existing Zeno/ZaraRadio/FM setup is still running — we have not touched it.
 
 **AzuraCast instance:**
 - VM: `azuracast` at `10.4.1.2`
 - Web UI: `http://10.4.1.2` (admin: `bbutson73@gmail.com`)
 - Stream URL: `http://10.4.1.2/listen/clearlake_christmas_radio/radio.mp3`
-- AzuraCast installed at Docker volumes (`/var/lib/docker/volumes/azuracast_*`) — NOT `/var/azuracast` (installer ran from `/tmp`)
-- Station media dir: `/var/lib/docker/volumes/azuracast_station_data/_data/clearlake_christmas_radio/media/`
+- Compose files: `/tmp/docker-compose.yml` + `/tmp/docker-compose.override.yml`
+- AzuraCast Docker volumes in `/var/lib/docker/volumes/azuracast_*`
 - Music library mount: `/mnt/music` (9p VirtFS from Unraid array, persistent in `/etc/fstab`)
+- Music inside container: `/var/azuracast/storage/music` (bind-mounted via override file)
+- Station media storage: `Local: /var/azuracast/storage/music` (614 audio files indexed)
 
-**Music library note:** The full library is at `/mnt/music` inside the VM. Only 10 test tracks have been copied into AzuraCast's media dir. Full import happens at P2. To copy more tracks: `sudo cp /mnt/music/<artist>/<album>/*.mp3 /var/lib/docker/volumes/azuracast_station_data/_data/clearlake_christmas_radio/media/`
+**Music library note:**
+Full library at `/mnt/music` inside the VM — 614 audio files indexed by AzuraCast (MP3 + FLAC mix; Windows metadata artifacts skipped). AutoDJ NOT in use — ZaraRadio is the playout brain. AzuraCast library is a fallback/future capability. To add new music: add to the Unraid share → AzuraCast picks it up on the next scan (or trigger manually via Media → Music Files).
+
+**Critical infrastructure note:**
+The docker-compose files live in `/tmp`. Always `cd /tmp` before any `docker compose` commands. The `docker-compose.override.yml` there is what exposes `/mnt/music` to the container — do not delete it.
 
 ---
 
@@ -64,12 +73,15 @@ AzuraCast is live on the LAN. P0 gate passed. The existing Zeno/ZaraRadio/FM set
 5. **Load test** — simulate 50 concurrent streams, verify headroom.
 6. **P1 Gate:** external listener connects + load holds.
 
+Then P2 remaining: repoint BUTT from Zeno → AzuraCast.
+
 ---
 
 ## Do-Not-Touch (guardrails)
 - **ZaraRadio 1.6 on the garage NUC** — the 24/7 playout brain. Leave it running.
 - **The FM transmitter + antenna path** — sacred. Any change gets flagged and gated separately.
 - **The existing *arr Docker stack + Plex** — AzuraCast VM is isolated specifically so we never disturb these.
+- **`/tmp/docker-compose.override.yml`** — do not delete; it's what mounts the music library into the container.
 
 ---
 
@@ -78,10 +90,10 @@ AzuraCast is live on the LAN. P0 gate passed. The existing Zeno/ZaraRadio/FM set
 - Gates are hard — no skipping.
 - Claude has Unraid MCP + SSH to the host, but NO shell to Brian's Windows machine.
 - Write docs via the filesystem MCP tools only.
-- Cutover from Zeno = repoint BUTT. The scary part (bandwidth, exposure) is de-risked by the 950 pipe + existing NginxProxyManager.
-- AzuraCast Docker volumes are in `/var/lib/docker/volumes/` on the VM — not `/var/azuracast`.
+- Cutover from Zeno = repoint BUTT. ZaraRadio stays the brain.
+- AzuraCast compose files live in `/tmp` — always run `docker compose` from there.
 
-## Commit & Push -- Master Watcher (added 2026-07-30)
+## Commit & Push — Master Watcher (added 2026-07-30)
 
 Auto commit + push for this repo is handled by the **Master Projects Watcher**
 (`C:\Projects\_watcher\master-watch.ps1`, launched at logon), which watches every
@@ -93,7 +105,5 @@ git repo under `C:\Projects`. The old per-repo watchers are retired.
 - Guards: skips while a manual git op is in progress (merge/rebase/lock); unstages +
   warns on any file over 25MB (never auto-pushes large/secret blobs); recovers on buffer overflow.
 - Routine edits need no manual git. Still make intentional manual commits for milestones
-  -- the `auto:` commits are a safety net, not a substitute for real history.
+  — the `auto:` commits are a safety net, not a substitute for real history.
 - Shared standards: this repo's root `CLAUDE.md` imports `C:\Projects\_shared\Claude.md`.
-
-> Note: AzuraCast is live on LAN (P0 done). NPM/domain exposure is P1.
