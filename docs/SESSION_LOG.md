@@ -2,6 +2,38 @@
 
 ---
 
+## 2026-08-07 — P2 partial — Music library import
+**Session Type:** INFRA
+**Deliverable:** Full music library visible in AzuraCast; 614 audio files indexed.
+
+### What Was Done
+
+**Library import approach**
+- Decided on custom storage location (Option A: point AzuraCast at `/mnt/music`) over copying files — no duplication, single source of truth on the Unraid array.
+- `/mnt/music` was already mounted in the VM with correct permissions (777), but AzuraCast's Docker container couldn't see it — the mount exists on the VM host, not inside the container.
+
+**docker-compose.override.yml**
+- Created `/tmp/docker-compose.override.yml` to bind-mount `/mnt/music` into the container at `/var/azuracast/storage/music`.
+- AzuraCast restarted via `docker compose down && docker compose up -d` from `/tmp`.
+- Added `Local: /var/azuracast/storage/music` as a new Storage Location in AzuraCast admin.
+- Switched station's Media Storage Location to the new path.
+- AzuraCast auto-triggered a scan; indexed 614 audio files (library has mixed MP3/FLAC + Windows metadata artifacts).
+
+**Key decisions / clarifications**
+- Brian confirmed AutoDJ is NOT a priority — ZaraRadio remains the playout brain; AzuraCast library is a fallback/future capability.
+- AzuraCast's role clarified: it IS the Icecast server (replacing Zeno FM) + management front-end. ZaraRadio → BUTT → AzuraCast → internet listeners.
+- ZaraRadio migration off the Christmas lights NUC added to parking lot — it's a shared machine with the light show and FM transmitter, which is a concern but an off-season problem.
+
+### Hard Lessons (do not repeat)
+- AzuraCast runs in Docker — host-mounted paths (`/mnt/music`) are NOT visible inside the container without an explicit bind mount. Always use `docker-compose.override.yml` for customizations; never edit `docker-compose.yml` directly.
+- The compose files live in `/tmp` (installer ran from there in P0) — always `cd /tmp` before any `docker compose` commands.
+
+### Next Session
+- **P1 — Exposure.** Add NginxProxyManager host `radio.clearlakechristmasradio.com` → `10.4.1.2`. Configure stream passthrough. Confirm Let's Encrypt cert. External listener test.
+- **P2 remaining:** Repoint BUTT from Zeno → AzuraCast (`http://radio.clearlakechristmasradio.com/radio.mp3`). Zeno retired.
+
+---
+
 ## 2026-08-06/07 — P0 Infra — Ubuntu VM + AzuraCast — GATE PASSED
 **Session Type:** INFRA
 **Deliverable:** Self-hosted AzuraCast instance streaming live on the LAN. P0 gate passed.
@@ -49,7 +81,7 @@
 
 ### Next Session
 - **P1 — Exposure.** Add NginxProxyManager host `radio.clearlakechristmasradio.com` → `10.4.1.2`. Configure stream passthrough. Confirm Let's Encrypt cert. External listener test.
-- At P2: import full music library, build proper playlists, repoint BUTT from Zeno.
+- At P2: import full music library, repoint BUTT from Zeno.
 
 ---
 
