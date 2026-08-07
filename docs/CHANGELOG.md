@@ -2,6 +2,15 @@
 
 ---
 
+## 2026-08-07 — P2 partial — Music library imported into AzuraCast
+- Created `docker-compose.override.yml` in `/tmp` to bind-mount `/mnt/music` into the AzuraCast container at `/var/azuracast/storage/music`.
+- Added `/var/azuracast/storage/music` as a Local Filesystem storage location in AzuraCast (Admin → Storage Locations).
+- Switched station Media Storage Location from the default AzuraCast dir to `/var/azuracast/storage/music`.
+- AzuraCast scanned and indexed 614 audio files (library contains mixed MP3/FLAC + Windows metadata artifacts; ~117 non-audio files skipped).
+- Brian confirmed: AutoDJ not a priority — ZaraRadio remains the playout brain; AzuraCast library is a fallback/future use.
+- Discussed ZaraRadio migration off the Christmas lights NUC — added to parking lot for off-season.
+- BUTT repoint from Zeno → AzuraCast is the remaining P2 task.
+
 ## 2026-08-06/07 — P0 Infra complete — AzuraCast live on LAN
 - Registered domain: `clearlakechristmasradio.com`. Target: `radio.clearlakechristmasradio.com`.
 - Ubuntu Server 24.04.2 LTS VM created on Unraid (`azuracast`, `10.4.1.2`, 2 vCPU / 4 GB / 50 GB, SeaBIOS).
