@@ -1,5 +1,5 @@
 # Clearlake Christmas Radio — Backlog
-**Last updated:** 2026-07-17 (Kickoff — architecture locked; SaaS resell route locked (white-label app, BLS-branded, tracked in Business Claude). Awaiting P0 infra start.)
+**Last updated:** 2026-08-07 (P0 complete — AzuraCast streaming live on LAN. P0 gate passed.)
 
 ---
 
@@ -10,22 +10,23 @@ Phase gates are hard. Do not advance a phase until its gate passes.
 
 ---
 
-### P0 — Infra ← NEXT
+### P0 — Infra ✅ COMPLETE
 **Gate: AzuraCast streaming music, heard on a second device on the LAN.**
-- ⬜ Create Ubuntu Server VM on Unraid (2 vCPU / 4 GB / ~40–60 GB to start).
-- ⬜ Mount array share for the media library (not on the VM vdisk).
-- ⬜ Run AzuraCast official Docker installer inside the VM.
-- ⬜ Create the station, set up an Icecast mount + AutoDJ.
-- ⬜ Drop in a handful of test tracks, confirm AutoDJ plays.
-- ⬜ **Gate:** play the stream on another LAN device.
+- ✅ Create Ubuntu Server VM on Unraid (2 vCPU / 4 GB / 50 GB, SeaBIOS).
+- ✅ Mount array share for the media library (`/mnt/music` via 9p, persistent in fstab).
+- ✅ Run AzuraCast official Docker installer inside the VM.
+- ✅ Create the station, set up an Icecast mount + AutoDJ.
+- ✅ Drop in a handful of test tracks, confirm AutoDJ plays.
+- ✅ **Gate:** stream heard on a second LAN device. (`http://10.4.1.2/listen/clearlake_christmas_radio/radio.mp3`)
 
 ---
 
-### P1 — Exposure + Capacity
+### P1 — Exposure + Capacity ← NEXT
 **Gate: an external listener connects over the internet; concurrent load verified.**
-- ⬜ Add NginxProxyManager host `radio.{domain}` → AzuraCast VM.
-- ⬜ Configure websocket / stream passthrough for the Icecast mount.
-- ⬜ Confirm Let's Encrypt cert serves cleanly.
+- ⬜ Add NginxProxyManager host `radio.clearlakechristmasradio.com` → `10.4.1.2` (port 80).
+- ⬜ Configure websocket / stream passthrough for the Icecast mount (`/radio.mp3`).
+- ⬜ Confirm Let's Encrypt cert serves cleanly on `radio.clearlakechristmasradio.com`.
+- ⬜ Update AzuraCast Site Base URL to `https://radio.clearlakechristmasradio.com`.
 - ⬜ Load-test simulated concurrent streams vs. the 950 up pipe (target 50+, headroom check).
 - ⬜ (If Cloudflare Tunnel considered) verify free-tier audio TOS first.
 - ⬜ **Gate:** external listener connects + N-concurrent load holds.
