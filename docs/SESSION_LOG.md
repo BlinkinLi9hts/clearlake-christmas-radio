@@ -2,6 +2,57 @@
 
 ---
 
+## 2026-08-06/07 — P0 Infra — Ubuntu VM + AzuraCast — GATE PASSED
+**Session Type:** INFRA
+**Deliverable:** Self-hosted AzuraCast instance streaming live on the LAN. P0 gate passed.
+
+### What Was Done
+
+**Domain**
+- Registered `clearlakechristmasradio.com`. Target subdomain: `radio.clearlakechristmasradio.com` (wired at P1 via NginxProxyManager).
+
+**Ubuntu VM creation**
+- Created `azuracast-ubuntu` VM on Unraid: 2 vCPU, 4 GB RAM, 50 GB raw vdisk (`/mnt/user/domains/azuracast-ubuntu/vdisk1.img`), SeaBIOS, Q35→i440fx.
+- Music library (`/mnt/user/Music/! Christmas Radio/`, 5.6 GB) exposed to VM as a 9p/VirtFS share (mount tag: `music`).
+- Ubuntu Server 24.04.2 LTS installed (kernel 6.8.0-137). Hostname: `azuracast`. IP: `10.4.1.2`.
+- SSH key-based access established from Unraid (`claude-ssh` user → `brian@10.4.1.2`).
+- Passwordless sudo configured for `brian` (`/etc/sudoers.d/brian-nopasswd`).
+- 9p music share mounted at `/mnt/music`, added to `/etc/fstab` for persistence.
+
+**AzuraCast installation**
+- Docker 29.7.2 installed via AzuraCast's official `docker.sh` installer.
+- AzuraCast Rolling Release (`2026-08-03`) running as Docker container at `http://10.4.1.2`.
+- Station created: **Clearlake Christmas Radio** — 192 kbps MP3, Icecast mount `/radio.mp3`.
+- AutoDJ (Liquidsoap) configured and running.
+
+**Media & playlist**
+- 10 test tracks copied from music library into AzuraCast station media dir.
+- Playlist `Christmas Rotation` created (General Rotation, Shuffled, Avoid Duplicates).
+- Tracks assigned to playlist.
+
+**P0 Gate**
+- Stream URL: `http://10.4.1.2/listen/clearlake_christmas_radio/radio.mp3`
+- **PASSED**: stream heard on a second LAN device. Bing Crosby confirmed.
+
+### Decisions Made This Session
+- `clearlakechristmasradio.com` locked as the domain. `radio.clearlakechristmasradio.com` is the target.
+- SeaBIOS (not OVMF) for the Ubuntu VM — UEFI caused unresolvable VNC keyboard issues.
+- Music library served via 9p mount (not copied to vdisk) — confirmed working.
+- AzuraCast installer ran from `/tmp` (not `/var/azuracast`) — Docker volumes are in `/var/lib/docker/volumes/azuracast_*`.
+
+### Hard Lessons (do not repeat)
+- DISABLE="yes" in Unraid `domain.cfg` blocks VM creation — must be "no".
+- Never toggle VM Manager off/on to fix config issues — it unmounts `/etc/libvirt`.
+- Two simultaneous wget processes corrupt an ISO — always single-process downloads.
+- Boot order defaults to vdisk first — set to ISO for first boot.
+- OVMF BIOS + noVNC = keyboard dead in UEFI menu. SeaBIOS works cleanly.
+
+### Next Session
+- **P1 — Exposure.** Add NginxProxyManager host `radio.clearlakechristmasradio.com` → `10.4.1.2`. Configure stream passthrough. Confirm Let's Encrypt cert. External listener test.
+- At P2: import full music library, build proper playlists, repoint BUTT from Zeno.
+
+---
+
 ## 2026-07-17 — Project Kickoff — Full Architecture Locked
 **Session Type:** STRATEGIC
 **Deliverable:** Project scaffolding (docs) + locked end-to-end architecture + monetization route + session startup primer
