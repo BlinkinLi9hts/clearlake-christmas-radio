@@ -1,5 +1,5 @@
 # Clearlake Christmas Radio — Backlog
-**Last updated:** 2026-08-07 (P0 complete — AzuraCast streaming live on LAN. P0 gate passed.)
+**Last updated:** 2026-08-07 (P2 partial — music library imported into AzuraCast. BUTT repoint pending.)
 
 ---
 
@@ -34,13 +34,14 @@ Phase gates are hard. Do not advance a phase until its gate passes.
 ---
 
 ### P2 — Content + Zeno Cutover
-**Gate: Zeno FM fully replaced; podcast/live takeover works and returns to auto; FM path untouched.**
-- ⬜ Import the full Christmas library into AzuraCast; verify metadata + artwork.
-- ⬜ Build playlists + scheduling to match current 24/7 rotation feel.
-- ⬜ Repoint **BUTT** from Zeno → AzuraCast mount (streamer creds).
-- ⬜ Test live takeover: go on-air, confirm stream switches, confirm return to AutoDJ after.
+**Gate: Zeno FM fully replaced; FM path untouched.**
+- ✅ Import the full music library into AzuraCast (614 files indexed from `/mnt/music`).
+- ⬜ Repoint **BUTT** from Zeno → AzuraCast mount (streamer creds from AzuraCast → Streamers/DJs).
+- ⬜ Confirm stream is live and receivable from AzuraCast after BUTT repoint.
 - ⬜ Confirm ZaraRadio + FM transmitter path completely undisturbed.
 - ⬜ **Gate:** Zeno decommissioned, station fully self-hosted.
+
+Note: AutoDJ/playlist setup is NOT a priority. ZaraRadio remains the playout brain. AzuraCast library is a fallback.
 
 ---
 
@@ -84,6 +85,7 @@ Phase gates are hard. Do not advance a phase until its gate passes.
 
 ## Parking Lot (post-launch / off-season)
 - **White-label companion app SaaS (BLS product)** — resell angle LOCKED as SaaS: sell the app + config dashboard, not music hosting; branded under BlinkinLights Studio; cross-sell with Maestromia. Strategic/GTM/pricing/financials tracked in the **Business Claude** project, not here. Build-side obligation: keep P3 auth/config multi-tenant-capable (above).
+- **ZaraRadio migration off the Christmas lights NUC** — the radio station and light show share a machine Brian isn't comfortable with. Options: cheap dedicated Windows mini PC, or Windows VM on Unraid with FM transmitter USB passthrough. FM transmitter is physically attached so must go with ZaraRadio wherever it lands. Off-season scoping only.
 - Playout consolidation: ZaraRadio → AzuraCast AutoDJ as single brain.
 - Public-tier go-public: statutory webcasting licensing spin-up (SoundExchange) if ever desired.
 - Station imaging / sweepers / branded IDs for the live stream.
