@@ -22,7 +22,7 @@ Ready.
 ```
 
 **Locked stack — do NOT re-litigate (see DECISIONS):**
-Unraid homelab (TS440, 32 GB, 950 symmetric) → **Ubuntu VM** → **AzuraCast** behind the existing **NginxProxyManager** → **BUTT** repointed off Zeno. App = **auth-first PWA + Capacitor** (web/iOS/Android). Two modes: **LIVE** (AzuraCast, synced to the lights) + **ON-DEMAND** (Plex, private). Podcast via **Castopod**. Home-direct, no relay needed.
+Unraid homelab (TS440, 32 GB, 950 symmetric) → **Ubuntu VM** (`azuracast`, `10.4.1.2`) → **AzuraCast** behind the existing **NginxProxyManager** → **BUTT** repointed off Zeno. App = **auth-first PWA + Capacitor** (web/iOS/Android). Two modes: **LIVE** (AzuraCast, synced to the lights) + **ON-DEMAND** (Plex, private). Podcast via **Castopod**. Home-direct, no relay needed.
 
 **🔴 Hard guardrails — violate none:**
 - **The FM transmitter + ZaraRadio 1.6 (garage NUC) are SACRED.** They keep the physical light show synced. Do not touch, or propose touching, without a flagged, separately-gated discussion.
@@ -31,54 +31,55 @@ Unraid homelab (TS440, 32 GB, 950 symmetric) → **Ubuntu VM** → **AzuraCast**
 - **Discuss before building. Prove in isolation before exposing or cutting over.**
 - Claude has Unraid MCP + SSH to the host; **no shell to Brian's Windows machine** (git/remotes are Brian's).
 
-**Right now:** Phase **P0 — Infra (not started)**. Immediate next action → decide the domain for `radio.{domain}`, then stand up the Ubuntu VM + AzuraCast and hit the P0 gate (stream heard on a second LAN device). Full task order is in the P0 section of `BACKLOG.md` and below.
-
 ---
 
-**Date:** 2026-07-17
-**Phase:** P0 — Infra (not started)
-**Last session:** Project kickoff — full end-to-end architecture locked, docs scaffolded, SaaS resell route locked.
+**Date:** 2026-08-07
+**Phase:** P1 — Exposure (not started)
+**Last session:** P0 complete — Ubuntu VM + AzuraCast installed, station streaming on LAN, P0 gate passed.
 
 ---
 
 ## Where We Are
-Architecture is fully locked (see `DECISIONS.md`). Nothing built yet. The repo + docs exist; infra is untouched. The existing Zeno/ZaraRadio/FM setup is still running exactly as before — we have not touched anything live.
+
+AzuraCast is live on the LAN. P0 gate passed. The existing Zeno/ZaraRadio/FM setup is still running — we have not touched it.
+
+**AzuraCast instance:**
+- VM: `azuracast` at `10.4.1.2`
+- Web UI: `http://10.4.1.2` (admin: `bbutson73@gmail.com`)
+- Stream URL: `http://10.4.1.2/listen/clearlake_christmas_radio/radio.mp3`
+- AzuraCast installed at Docker volumes (`/var/lib/docker/volumes/azuracast_*`) — NOT `/var/azuracast` (installer ran from `/tmp`)
+- Station media dir: `/var/lib/docker/volumes/azuracast_station_data/_data/clearlake_christmas_radio/media/`
+- Music library mount: `/mnt/music` (9p VirtFS from Unraid array, persistent in `/etc/fstab`)
+
+**Music library note:** The full library is at `/mnt/music` inside the VM. Only 10 test tracks have been copied into AzuraCast's media dir. Full import happens at P2. To copy more tracks: `sudo cp /mnt/music/<artist>/<album>/*.mp3 /var/lib/docker/volumes/azuracast_station_data/_data/clearlake_christmas_radio/media/`
 
 ---
 
-## Next Session — First Tasks in Order (P0 — Infra)
+## Next Session — P1 Tasks in Order
 
-1. **Decide the domain/subdomain** for `radio.{domain}` (which existing domain, or a new one). Needed before NPM in P1, but good to settle early.
-2. **Create the Ubuntu Server VM** on Unraid — 2 vCPU / 4 GB RAM / ~40–60 GB vdisk to start.
-3. **Mount an array share** into the VM for the media library (keep the library off the vdisk).
-4. **Run AzuraCast's official Docker installer** inside the VM (Linux shell familiarity assumed).
-5. **Create the station** — Icecast mount + AutoDJ, drop in a few test tracks.
-6. **P0 Gate:** play the stream on a second device on the LAN. Do not proceed to P1 until this passes.
-
----
-
-## Open Questions (settle before or during P0)
-- Which domain for `radio.{domain}`?
-- Music library: where does it live now, how big, what format/metadata quality? (Drives the P2 import.)
-- Confirm the Ubuntu VM sizing is comfortable (can grow — start modest).
+1. **Add NPM host** `radio.clearlakechristmasradio.com` → `10.4.1.2:80` with websocket/stream passthrough.
+2. **Let's Encrypt cert** — should auto-provision via existing NPM setup.
+3. **Update AzuraCast Site Base URL** to `https://radio.clearlakechristmasradio.com` (Admin → System Settings).
+4. **External listener test** — confirm stream works from outside the LAN.
+5. **Load test** — simulate 50 concurrent streams, verify headroom.
+6. **P1 Gate:** external listener connects + load holds.
 
 ---
 
 ## Do-Not-Touch (guardrails)
 - **ZaraRadio 1.6 on the garage NUC** — the 24/7 playout brain. Leave it running.
-- **The FM transmitter + antenna path** — this is what keeps the physical light show synced. Sacred. Any change that could affect it gets flagged and gated separately.
-- **The existing *arr Docker stack + Plex** — the AzuraCast VM is isolated specifically so we never disturb these.
+- **The FM transmitter + antenna path** — sacred. Any change gets flagged and gated separately.
+- **The existing *arr Docker stack + Plex** — AzuraCast VM is isolated specifically so we never disturb these.
 
 ---
 
 ## Key Reminders
-- Prove in isolation (LAN) before exposing to the internet.
+- Prove in isolation (LAN) before exposing to the internet. ✅ Done.
 - Gates are hard — no skipping.
-- Claude has Unraid MCP + SSH to the host, but NO shell to Brian's Windows machine (git remotes / Windows plumbing are Brian's).
-- Write docs via the filesystem MCP tools (they reach the host); the native file tools land in a sandbox and won't appear in the repo.
-- Cutover from Zeno is a repoint of BUTT — a swap, not a rebuild. The scary part (bandwidth, exposure) is already de-risked by the 950 pipe + existing NginxProxyManager.
-- Resell/SaaS path is preserved via a P3 forward-compat line (keep auth multi-tenant-capable). Strategy itself lives in Business Claude.
-
+- Claude has Unraid MCP + SSH to the host, but NO shell to Brian's Windows machine.
+- Write docs via the filesystem MCP tools only.
+- Cutover from Zeno = repoint BUTT. The scary part (bandwidth, exposure) is de-risked by the 950 pipe + existing NginxProxyManager.
+- AzuraCast Docker volumes are in `/var/lib/docker/volumes/` on the VM — not `/var/azuracast`.
 
 ## Commit & Push -- Master Watcher (added 2026-07-30)
 
@@ -95,4 +96,4 @@ git repo under `C:\Projects`. The old per-repo watchers are retired.
   -- the `auto:` commits are a safety net, not a substitute for real history.
 - Shared standards: this repo's root `CLAUDE.md` imports `C:\Projects\_shared\Claude.md`.
 
-> Note: this repo has **no live deploy yet** (still P0) -- pushes just back it up to GitHub; nothing goes live.
+> Note: AzuraCast is live on LAN (P0 done). NPM/domain exposure is P1.
