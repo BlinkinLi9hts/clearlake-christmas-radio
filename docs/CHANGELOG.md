@@ -2,6 +2,17 @@
 
 ---
 
+## 2026-08-07 (evening) — P1 Complete — Exposure + public stream live
+- Added NPM proxy host `radio.clearlakechristmasradio.com` → `10.4.1.2:80` with websocket support and `proxy_buffering off; proxy_read_timeout 3600s;` for Icecast passthrough.
+- Added Cloudflare A record `radio.clearlakechristmasradio.com → 199.187.202.175` (DNS only, grey cloud).
+- Let's Encrypt cert provisioned (npm-16, expires 2026-11-06).
+- Updated AzuraCast Site Base URL to `https://radio.clearlakechristmasradio.com`.
+- Fixed Liquidsoap `media_path` (was hardcoded to default station dir; regenerated via `azuracast_cli azuracast:radio:restart 1` → now `/var/azuracast/storage/music`).
+- Added 614-track library to `Christmas Rotation` playlist; set 24/7 schedule. AutoDJ confirmed playing.
+- Added NPM Custom Location `/live` → `return 302` to full listen URL. Public stream URL: `https://radio.clearlakechristmasradio.com/live`.
+- Load test: 50 concurrent streams confirmed by Icecast (~9.6 Mbps, ~1% of 950 Mbps uplink).
+- **P1 gate PASSED**: external listener confirmed from phone on mobile data.
+
 ## 2026-08-07 — P2 partial — Music library imported into AzuraCast
 - Created `docker-compose.override.yml` in `/tmp` to bind-mount `/mnt/music` into the AzuraCast container at `/var/azuracast/storage/music`.
 - Added `/var/azuracast/storage/music` as a Local Filesystem storage location in AzuraCast (Admin → Storage Locations).
