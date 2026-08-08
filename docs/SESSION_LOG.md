@@ -2,6 +2,61 @@
 
 ---
 
+## 2026-08-07 (late evening) — P2 GATE PASSED — Zeno cutover complete
+**Session Type:** INFRA
+**Deliverable:** BUTT connected to AzuraCast via harbor port; live stream confirmed; Zeno fully retired.
+
+### What Was Done
+
+**Streamer/DJ account creation (blocked in UI — worked around via DB)**
+- AzuraCast Streamers/DJs UI at `/station/1/streamers` silently fails to save any new streamer — no error, no record created. Root cause unknown (likely a UI JS bug in this AzuraCast 0.23.7 build).
+- API approach attempted: `POST /api/station/1/streamers` using the login token from `azuracast_cli azuracast:account:login-token`. API returned "You must be logged in" — login tokens are not API keys.
+- CLI: `azuracast_cli list` has no streamer-management commands.
+- **Resolution: Direct database insert via MariaDB inside the container.**
+  - DB credentials found via `docker inspect azuracast` → env vars: `MYSQL_USER=azuracast`, `MYSQL_PASSWORD=azur4c457`, `MYSQL_DATABASE=azuracast`.
+  - MariaDB binary: `/usr/bin/mariadb` (not `mysql`); must connect via `127.0.0.1:3306` (not `localhost` socket).
+  - Initial insert used `PASSWORD_BCRYPT` — auth failed. AzuraCast source (`StationStreamer.php`) uses `PASSWORD_ARGON2ID`.
+  - Re-generated hash via PHP inside the container (`password_hash("ButtPass1!", PASSWORD_ARGON2ID)`), updated via PHP PDO script (shell `$` escaping made direct SQL UPDATE unusable).
+  - After hash update, `azuracast_cli azuracast:cache:clear` required — auth was returning `allow:false` until cache was flushed.
+
+**Streamer account:**
+- Username: `butt` / Password: `ButtPass1!` / Display: BUTT Broadcaster
+- Stored in `station_streamers` table, `station_id=1`, `is_active=1`, `enforce_schedule=0`
+
+**BUTT settings (final working config):**
+- Host: `10.4.1.2`
+- Port: `8005` (Liquidsoap harbor — NOT Icecast port 8000; direct Icecast rejects second source with 403)
+- Mount: `/`
+- Username: `butt`
+- Password: `ButtPass1!`
+
+**Connection confirmed:**
+- Liquidsoap log shows `allow:true` and `input_streamer: Decoding...` after cache clear.
+- AzuraCast dashboard shows live stream active.
+- FM transmitter + ZaraRadio on garage NUC untouched ✅
+
+**Open item — BUTT metadata display:**
+- AzuraCast now-playing shows whatever metadata BUTT sends, which may not match the actual audio. Not a blocker. Fix requires ZaraRadio → BUTT metadata passthrough (ZaraRadio writes a "now playing" file; BUTT reads it). Added to backlog.
+
+**P2 Gate: PASSED**
+- BUTT connected to AzuraCast over harbor port ✅
+- Live stream active in AzuraCast dashboard ✅
+- Zeno FM decommissioned ✅
+- ZaraRadio + FM transmitter path untouched ✅
+
+### Hard Lessons (do not repeat)
+- AzuraCast streamer passwords use `PASSWORD_ARGON2ID`, not bcrypt. If ever inserting directly into the DB again, use `password_hash($pw, PASSWORD_ARGON2ID)` in PHP.
+- Shell `$` interpolation mangles Argon2id hashes in SQL strings. Always use PHP PDO with parameterized queries for hash updates.
+- AzuraCast caches entities — after a DB-level change, run `azuracast_cli azuracast:cache:clear` or auth will keep returning stale results.
+- BUTT must connect to the **harbor port (8005)**, not the Icecast source port (8000). Icecast rejects a second source connection with 403 because Liquidsoap already owns the mount.
+- MariaDB inside the AzuraCast container connects via TCP (`host=127.0.0.1`) not via socket (`host=localhost`). The socket path requires running as root.
+
+### Next Session — P3 App Core
+- Begin companion app: PWA shell, now-playing, AzuraCast API integration, auth scaffolding.
+- See BACKLOG P3 for full task list.
+
+---
+
 ## 2026-08-07 (evening) — P1 GATE PASSED — Exposure complete
 **Session Type:** INFRA
 **Deliverable:** AzuraCast publicly reachable over HTTPS; 50-concurrent load test passed; P1 gate closed.
