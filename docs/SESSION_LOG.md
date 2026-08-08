@@ -2,6 +2,58 @@
 
 ---
 
+## 2026-08-07 (evening) — P1 GATE PASSED — Exposure complete
+**Session Type:** INFRA
+**Deliverable:** AzuraCast publicly reachable over HTTPS; 50-concurrent load test passed; P1 gate closed.
+
+### What Was Done
+
+**NPM proxy host**
+- Added `radio.clearlakechristmasradio.com` → `10.4.1.2:80` in NginxProxyManager with Websockets Support enabled.
+- Added custom nginx config to the proxy host: `proxy_buffering off; proxy_read_timeout 3600s;` (required for live audio streaming).
+- First cert attempt failed — domain had no DNS A record. Added `radio.clearlakechristmasradio.com → 199.187.202.175` (DNS only, grey cloud) in Cloudflare.
+- Let's Encrypt cert provisioned successfully on retry. HTTPS live.
+
+**AzuraCast base URL**
+- Updated Site Base URL to `https://radio.clearlakechristmasradio.com` in Admin → System Settings.
+
+**AutoDJ / Liquidsoap fix**
+- Station showed "Station Offline" — Liquidsoap (station_1_backend) had stopped due to empty queue.
+- Root cause: Liquidsoap config had `media_path` hardcoded to `/var/azuracast/stations/clearlake_christmas_radio/media` (default) rather than `/var/azuracast/storage/music` (custom mount). Config was generated before storage location was switched.
+- Fix: `azuracast_cli azuracast:radio:restart 1` regenerated the Liquidsoap config with correct `media_path := "/var/azuracast/storage/music"`. Station came online. Full 614-track library now plays.
+- Brian added all 614 tracks to the `Christmas Rotation` playlist and set a 24/7 schedule.
+
+**Short stream URL**
+- Added NPM Custom Location `/live` on the `radio.clearlakechristmasradio.com` proxy host.
+- Gear-icon custom config (inside the location block): `return 302 https://radio.clearlakechristmasradio.com/listen/clearlake_christmas_radio/radio.mp3;`
+- Public stream URL: `https://radio.clearlakechristmasradio.com/live`
+
+**Load test**
+- 50 concurrent curl connections held cleanly. Icecast confirmed 50 listeners at peak.
+- Bandwidth: ~9.6 Mbps (50 × 192 kbps) = ~1% of 950 Mbps uplink. Ample headroom.
+
+**P1 Gate: PASSED**
+- External listener confirmed from phone on mobile data ✅
+- SSL valid, stream plays ✅
+- 50 concurrent streams held ✅
+
+### Hard Lessons (do not repeat)
+- AzuraCast's Liquidsoap config (`media_path`) is generated at station restart time. If the storage location is changed after the last config generation, the old path is baked in. Always run `azuracast_cli azuracast:radio:restart 1` after any storage location change.
+- NPM Custom Locations gear-icon config box inserts content INSIDE the generated `location {}` block — do not wrap in another `location {}`. Paste the directive only.
+- Cloudflare A record must be **DNS only (grey cloud)** for audio streams — proxied (orange) violates free-tier TOS and will break Icecast.
+
+### Next Session — P2 Remaining (BUTT repoint)
+- In BUTT on the garage NUC: change server from Zeno → AzuraCast.
+  - Host: `radio.clearlakechristmasradio.com`
+  - Port: `80` (HTTP source) or `8000` if direct to Icecast
+  - Mount: `/radio.mp3`
+  - Source credentials: AzuraCast Station → Broadcasting → Icecast → Source username/password (Username: `source`, Password shown in dashboard)
+- Confirm stream live in AzuraCast after BUTT repoint.
+- Confirm ZaraRadio + FM transmitter path completely undisturbed.
+- P2 Gate: Zeno decommissioned, station fully self-hosted.
+
+---
+
 ## 2026-08-07 — P2 partial — Music library import
 **Session Type:** INFRA
 **Deliverable:** Full music library visible in AzuraCast; 614 audio files indexed.
