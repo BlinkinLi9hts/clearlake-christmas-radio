@@ -1,5 +1,5 @@
 # Clearlake Christmas Radio — Backlog
-**Last updated:** 2026-08-07 (P2 partial — music library imported into AzuraCast. BUTT repoint pending.)
+**Last updated:** 2026-08-07 (P1 COMPLETE — exposure live, P1 gate passed. P2 remaining: BUTT repoint.)
 
 ---
 
@@ -21,27 +21,32 @@ Phase gates are hard. Do not advance a phase until its gate passes.
 
 ---
 
-### P1 — Exposure + Capacity ← NEXT
+### P1 — Exposure + Capacity ✅ COMPLETE
 **Gate: an external listener connects over the internet; concurrent load verified.**
-- ⬜ Add NginxProxyManager host `radio.clearlakechristmasradio.com` → `10.4.1.2` (port 80).
-- ⬜ Configure websocket / stream passthrough for the Icecast mount (`/radio.mp3`).
-- ⬜ Confirm Let's Encrypt cert serves cleanly on `radio.clearlakechristmasradio.com`.
-- ⬜ Update AzuraCast Site Base URL to `https://radio.clearlakechristmasradio.com`.
-- ⬜ Load-test simulated concurrent streams vs. the 950 up pipe (target 50+, headroom check).
-- ⬜ (If Cloudflare Tunnel considered) verify free-tier audio TOS first.
-- ⬜ **Gate:** external listener connects + N-concurrent load holds.
+- ✅ Add NginxProxyManager host `radio.clearlakechristmasradio.com` → `10.4.1.2` (port 80).
+- ✅ Configure websocket / stream passthrough + `proxy_buffering off` for Icecast.
+- ✅ Add Cloudflare A record: `radio.clearlakechristmasradio.com` → `199.187.202.175` (DNS only).
+- ✅ Let's Encrypt cert provisioned and serving cleanly.
+- ✅ Update AzuraCast Site Base URL to `https://radio.clearlakechristmasradio.com`.
+- ✅ Fix Liquidsoap `media_path` (was pointing to default station dir; regenerated via `azuracast:radio:restart`).
+- ✅ Full 614-track library added to `Christmas Rotation` playlist; 24/7 schedule set.
+- ✅ Short stream URL: `https://radio.clearlakechristmasradio.com/live` (NPM `/live` → redirect).
+- ✅ Load test: 50 concurrent streams confirmed by Icecast (~9.6 Mbps, ~1% of 950 Mbps uplink).
+- ✅ **Gate:** external listener confirmed from phone on mobile data; load holds.
 
 ---
 
-### P2 — Content + Zeno Cutover
+### P2 — Content + Zeno Cutover ← NEXT
 **Gate: Zeno FM fully replaced; FM path untouched.**
 - ✅ Import the full music library into AzuraCast (614 files indexed from `/mnt/music`).
-- ⬜ Repoint **BUTT** from Zeno → AzuraCast mount (streamer creds from AzuraCast → Streamers/DJs).
+- ⬜ Repoint **BUTT** from Zeno → AzuraCast.
+  - Host: `radio.clearlakechristmasradio.com`, Port: `80`, Mount: `/radio.mp3`
+  - Source credentials: from AzuraCast Station → Broadcasting → Icecast (Username: `source`)
 - ⬜ Confirm stream is live and receivable from AzuraCast after BUTT repoint.
 - ⬜ Confirm ZaraRadio + FM transmitter path completely undisturbed.
 - ⬜ **Gate:** Zeno decommissioned, station fully self-hosted.
 
-Note: AutoDJ/playlist setup is NOT a priority. ZaraRadio remains the playout brain. AzuraCast library is a fallback.
+Note: AutoDJ/playlist setup is running as a fallback. ZaraRadio remains the playout brain when BUTT is connected.
 
 ---
 
