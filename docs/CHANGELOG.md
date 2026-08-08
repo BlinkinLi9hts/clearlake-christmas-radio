@@ -2,6 +2,15 @@
 
 ---
 
+## 2026-08-07 (late evening) — P2 Complete — Zeno cutover complete, BUTT live on AzuraCast
+- Created Streamer/DJ account (`butt` / `ButtPass1!`) via direct MariaDB insert (UI save silently fails in AzuraCast 0.23.7; workaround documented in SESSION_LOG).
+- Password stored as Argon2id hash (AzuraCast's required algorithm — not bcrypt).
+- Ran `azuracast_cli azuracast:cache:clear` to flush entity cache after DB-level insert.
+- BUTT repointed from Zeno → AzuraCast: Host `10.4.1.2`, Port `8005` (Liquidsoap harbor), Mount `/`, Username `butt`.
+- Liquidsoap log confirmed `allow:true` and `input_streamer: Decoding...`.
+- AzuraCast dashboard shows live stream active. ZaraRadio + FM transmitter untouched.
+- **P2 gate PASSED**: Zeno FM decommissioned; station fully self-hosted.
+
 ## 2026-08-07 (evening) — P1 Complete — Exposure + public stream live
 - Added NPM proxy host `radio.clearlakechristmasradio.com` → `10.4.1.2:80` with websocket support and `proxy_buffering off; proxy_read_timeout 3600s;` for Icecast passthrough.
 - Added Cloudflare A record `radio.clearlakechristmasradio.com → 199.187.202.175` (DNS only, grey cloud).
