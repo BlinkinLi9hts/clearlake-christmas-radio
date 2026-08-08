@@ -37,14 +37,14 @@ Unraid homelab (TS440, 32 GB, 950 symmetric) → **Ubuntu VM** (`azuracast`, `10
 ---
 
 **Date:** 2026-08-07
-**Phase:** P2 — Zeno Cutover (in progress — BUTT repoint remaining)
-**Last session:** P1 COMPLETE — NPM proxy + HTTPS cert + AutoDJ fix + 50-concurrent load test passed. External listener confirmed from phone on mobile data.
+**Phase:** P3 — App Core (next)
+**Last session:** P2 COMPLETE — BUTT repointed to AzuraCast via harbor port 8005; streamer account created via direct DB insert; Liquidsoap confirmed `allow:true`; Zeno FM retired.
 
 ---
 
 ## Where We Are
 
-P1 gate is passed. The station is publicly reachable over HTTPS, AutoDJ is running the full 614-track library, and the stream has been confirmed from a real external device.
+P2 gate is passed. The station is fully self-hosted. BUTT is live on AzuraCast. Zeno FM is decommissioned.
 
 **Public stream URL:** `https://radio.clearlakechristmasradio.com/live` (NPM redirect → full listen URL)
 **Full listen URL:** `https://radio.clearlakechristmasradio.com/listen/clearlake_christmas_radio/radio.mp3`
@@ -59,6 +59,7 @@ P1 gate is passed. The station is publicly reachable over HTTPS, AutoDJ is runni
 - Music inside container: `/var/azuracast/storage/music` (bind-mounted via override file)
 - Station media storage: `Local: /var/azuracast/storage/music` (614 audio files indexed)
 - Liquidsoap `media_path`: `/var/azuracast/storage/music` ✅ (verified after fix)
+- DB: MariaDB inside the `azuracast` container — `mysql:host=127.0.0.1;dbname=azuracast` / `azuracast` / `azur4c457`
 
 **NPM proxy host:**
 - Domain: `radio.clearlakechristmasradio.com` → `10.4.1.2:80`
@@ -70,28 +71,22 @@ P1 gate is passed. The station is publicly reachable over HTTPS, AutoDJ is runni
 - `radio.clearlakechristmasradio.com` → `199.187.202.175` (A record, DNS only / grey cloud)
 
 **AutoDJ:**
-- Running. `Christmas Rotation` playlist has all 614 tracks. 24/7 schedule active.
-- AutoDJ is a fallback only — ZaraRadio via BUTT will be the source when connected.
+- Running as fallback when BUTT is disconnected. `Christmas Rotation` playlist, 614 tracks, 24/7 schedule.
+
+**BUTT streamer account:**
+- Username: `butt` / Password: `ButtPass1!`
+- Harbor port: `8005`, Mount: `/`
+- Stored in `station_streamers` table (id=1, station_id=1)
+- ⚠️ AzuraCast Streamers UI save silently fails in this build — use direct DB insert if recreating. Password must be hashed with `PASSWORD_ARGON2ID` (not bcrypt). After any DB change, run `azuracast_cli azuracast:cache:clear`.
 
 ---
 
-## Next Session — P2 BUTT Repoint
+## Next Session — P3 App Core
 
-The only remaining P2 task is repointing BUTT on the garage NUC from Zeno to AzuraCast.
-
-**BUTT settings to change:**
-- Server/Host: `radio.clearlakechristmasradio.com`
-- Port: `80`
-- Mount: `/radio.mp3`
-- Type: Icecast
-- Source username: `source`
-- Source password: visible in AzuraCast Station → Broadcasting → Icecast → "Source" credentials
-
-**After repoint:**
-1. Confirm stream shows as live in AzuraCast dashboard (listener count > 0, "On the Air" green).
-2. Confirm the public stream URL plays the ZaraRadio feed (not AutoDJ).
-3. Confirm ZaraRadio + FM transmitter path completely undisturbed.
-4. P2 Gate: Zeno decommissioned.
+Begin the companion app. See BACKLOG P3 for full task list. Key first steps:
+- Mockup app shell (station identity, now-playing, transport).
+- Wire AzuraCast Now Playing API for live track/listener data.
+- Auth scaffolding (accounts from day one).
 
 ---
 
@@ -109,6 +104,8 @@ The only remaining P2 task is repointing BUTT on the garage NUC from Zeno to Azu
 - AzuraCast compose files live in `/tmp` on the **VM** — always `sudo docker compose` from there.
 - Cloudflare A record must stay **grey cloud (DNS only)** — proxied will break audio streams.
 - Write docs via the filesystem MCP tools only.
+- MariaDB in the container: use `host=127.0.0.1` (TCP), not `host=localhost` (socket requires root).
+- Streamer passwords: `PASSWORD_ARGON2ID`. Shell `$` signs mangle hashes — use PHP PDO for updates.
 
 ## Commit & Push — Master Watcher (added 2026-07-30)
 
