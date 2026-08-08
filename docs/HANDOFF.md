@@ -37,43 +37,61 @@ Unraid homelab (TS440, 32 GB, 950 symmetric) → **Ubuntu VM** (`azuracast`, `10
 ---
 
 **Date:** 2026-08-07
-**Phase:** P1 — Exposure (not started)
-**Last session:** P2 partial — music library imported (614 files). AutoDJ not a priority; ZaraRadio remains the playout brain. BUTT repoint (Zeno cutover) still pending.
+**Phase:** P2 — Zeno Cutover (in progress — BUTT repoint remaining)
+**Last session:** P1 COMPLETE — NPM proxy + HTTPS cert + AutoDJ fix + 50-concurrent load test passed. External listener confirmed from phone on mobile data.
 
 ---
 
 ## Where We Are
 
-AzuraCast is live on the LAN. P0 gate passed. Music library imported. The existing Zeno/ZaraRadio/FM setup is still running — we have not touched it.
+P1 gate is passed. The station is publicly reachable over HTTPS, AutoDJ is running the full 614-track library, and the stream has been confirmed from a real external device.
+
+**Public stream URL:** `https://radio.clearlakechristmasradio.com/live` (NPM redirect → full listen URL)
+**Full listen URL:** `https://radio.clearlakechristmasradio.com/listen/clearlake_christmas_radio/radio.mp3`
 
 **AzuraCast instance:**
 - VM: `azuracast` at `10.4.1.2`
 - Web UI: `http://10.4.1.2` (admin: `bbutson73@gmail.com`)
-- Stream URL: `http://10.4.1.2/listen/clearlake_christmas_radio/radio.mp3`
+- Stream URL (internal): `http://10.4.1.2/listen/clearlake_christmas_radio/radio.mp3`
 - Compose files: `/tmp/docker-compose.yml` + `/tmp/docker-compose.override.yml`
 - AzuraCast Docker volumes in `/var/lib/docker/volumes/azuracast_*`
 - Music library mount: `/mnt/music` (9p VirtFS from Unraid array, persistent in `/etc/fstab`)
 - Music inside container: `/var/azuracast/storage/music` (bind-mounted via override file)
 - Station media storage: `Local: /var/azuracast/storage/music` (614 audio files indexed)
+- Liquidsoap `media_path`: `/var/azuracast/storage/music` ✅ (verified after fix)
 
-**Music library note:**
-Full library at `/mnt/music` inside the VM — 614 audio files indexed by AzuraCast (MP3 + FLAC mix; Windows metadata artifacts skipped). AutoDJ NOT in use — ZaraRadio is the playout brain. AzuraCast library is a fallback/future capability. To add new music: add to the Unraid share → AzuraCast picks it up on the next scan (or trigger manually via Media → Music Files).
+**NPM proxy host:**
+- Domain: `radio.clearlakechristmasradio.com` → `10.4.1.2:80`
+- SSL: Let's Encrypt cert (npm-16, expires 2026-11-06, auto-renews)
+- Custom nginx: `proxy_buffering off; proxy_read_timeout 3600s;`
+- Custom location `/live`: `return 302 https://radio.clearlakechristmasradio.com/listen/clearlake_christmas_radio/radio.mp3;`
 
-**Critical infrastructure note:**
-The docker-compose files live in `/tmp`. Always `cd /tmp` before any `docker compose` commands. The `docker-compose.override.yml` there is what exposes `/mnt/music` to the container — do not delete it.
+**DNS (Cloudflare):**
+- `radio.clearlakechristmasradio.com` → `199.187.202.175` (A record, DNS only / grey cloud)
+
+**AutoDJ:**
+- Running. `Christmas Rotation` playlist has all 614 tracks. 24/7 schedule active.
+- AutoDJ is a fallback only — ZaraRadio via BUTT will be the source when connected.
 
 ---
 
-## Next Session — P1 Tasks in Order
+## Next Session — P2 BUTT Repoint
 
-1. **Add NPM host** `radio.clearlakechristmasradio.com` → `10.4.1.2:80` with websocket/stream passthrough.
-2. **Let's Encrypt cert** — should auto-provision via existing NPM setup.
-3. **Update AzuraCast Site Base URL** to `https://radio.clearlakechristmasradio.com` (Admin → System Settings).
-4. **External listener test** — confirm stream works from outside the LAN.
-5. **Load test** — simulate 50 concurrent streams, verify headroom.
-6. **P1 Gate:** external listener connects + load holds.
+The only remaining P2 task is repointing BUTT on the garage NUC from Zeno to AzuraCast.
 
-Then P2 remaining: repoint BUTT from Zeno → AzuraCast.
+**BUTT settings to change:**
+- Server/Host: `radio.clearlakechristmasradio.com`
+- Port: `80`
+- Mount: `/radio.mp3`
+- Type: Icecast
+- Source username: `source`
+- Source password: visible in AzuraCast Station → Broadcasting → Icecast → "Source" credentials
+
+**After repoint:**
+1. Confirm stream shows as live in AzuraCast dashboard (listener count > 0, "On the Air" green).
+2. Confirm the public stream URL plays the ZaraRadio feed (not AutoDJ).
+3. Confirm ZaraRadio + FM transmitter path completely undisturbed.
+4. P2 Gate: Zeno decommissioned.
 
 ---
 
@@ -86,12 +104,11 @@ Then P2 remaining: repoint BUTT from Zeno → AzuraCast.
 ---
 
 ## Key Reminders
-- Prove in isolation (LAN) before exposing to the internet. ✅ Done.
-- Gates are hard — no skipping.
-- Claude has Unraid MCP + SSH to the host, but NO shell to Brian's Windows machine.
+- After any AzuraCast storage location change, always run `azuracast_cli azuracast:radio:restart 1` to regenerate Liquidsoap config with the correct `media_path`.
+- NPM compose files are on the **Unraid host** (not the AzuraCast VM). SSH context matters.
+- AzuraCast compose files live in `/tmp` on the **VM** — always `sudo docker compose` from there.
+- Cloudflare A record must stay **grey cloud (DNS only)** — proxied will break audio streams.
 - Write docs via the filesystem MCP tools only.
-- Cutover from Zeno = repoint BUTT. ZaraRadio stays the brain.
-- AzuraCast compose files live in `/tmp` — always run `docker compose` from there.
 
 ## Commit & Push — Master Watcher (added 2026-07-30)
 
