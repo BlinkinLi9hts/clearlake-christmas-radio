@@ -1,5 +1,5 @@
 # Clearlake Christmas Radio — Backlog
-**Last updated:** 2026-08-07 (P1 COMPLETE — exposure live, P1 gate passed. P2 remaining: BUTT repoint.)
+**Last updated:** 2026-08-07 (P2 COMPLETE — Zeno retired, BUTT live on AzuraCast. Next: P3 App Core.)
 
 ---
 
@@ -36,21 +36,20 @@ Phase gates are hard. Do not advance a phase until its gate passes.
 
 ---
 
-### P2 — Content + Zeno Cutover ← NEXT
+### P2 — Content + Zeno Cutover ✅ COMPLETE
 **Gate: Zeno FM fully replaced; FM path untouched.**
 - ✅ Import the full music library into AzuraCast (614 files indexed from `/mnt/music`).
-- ⬜ Repoint **BUTT** from Zeno → AzuraCast.
-  - Host: `radio.clearlakechristmasradio.com`, Port: `80`, Mount: `/radio.mp3`
-  - Source credentials: from AzuraCast Station → Broadcasting → Icecast (Username: `source`)
-- ⬜ Confirm stream is live and receivable from AzuraCast after BUTT repoint.
-- ⬜ Confirm ZaraRadio + FM transmitter path completely undisturbed.
-- ⬜ **Gate:** Zeno decommissioned, station fully self-hosted.
+- ✅ Create AzuraCast Streamer/DJ account for BUTT (`butt` / `ButtPass1!`, harbor port 8005).
+- ✅ Repoint BUTT from Zeno → AzuraCast (Host: `10.4.1.2`, Port: `8005`, Mount: `/`).
+- ✅ Confirm stream is live in AzuraCast dashboard after BUTT repoint.
+- ✅ Confirm ZaraRadio + FM transmitter path completely undisturbed.
+- ✅ **Gate:** Zeno decommissioned, station fully self-hosted.
 
-Note: AutoDJ/playlist setup is running as a fallback. ZaraRadio remains the playout brain when BUTT is connected.
+Note: AutoDJ/playlist is running as a fallback when BUTT is disconnected. ZaraRadio remains the playout brain when BUTT is connected.
 
 ---
 
-### P3 — App Core (Web / PWA) + Auth
+### P3 — App Core (Web / PWA) + Auth ← NEXT
 **Gate: app works in-browser and installs on a phone; accounts functional.**
 - ⬜ Mockup app shell (station identity, now-playing, transport).
 - ⬜ Live stream player: play/pause, now-playing from AzuraCast API, listener count.
@@ -89,6 +88,9 @@ Note: AutoDJ/playlist setup is running as a fallback. ZaraRadio remains the play
 ---
 
 ## Parking Lot (post-launch / off-season)
+- **BUTT metadata display** — AzuraCast now-playing shows whatever BUTT sends, which doesn't reflect the actual ZaraRadio queue. Fix: configure ZaraRadio to write a "now playing" file; configure BUTT to read it and pass metadata to AzuraCast. Low priority until the season is closer.
+- **Recurring Liquidsoap crash (queue empty)** — Liquidsoap self-terminates when the AutoDJ queue runs dry (e.g. empty playlist or midnight schedule gap). "No valid playlists detected" warnings seen. Not critical while BUTT is live, but needs investigation before season to ensure unattended AutoDJ fallback works cleanly.
+- **AzuraCast Streamers UI save silently failing** — The `/station/1/streamers` Add Streamer form does nothing on Save. Workarounded via direct DB insert. Worth testing after any AzuraCast update.
 - **White-label companion app SaaS (BLS product)** — resell angle LOCKED as SaaS: sell the app + config dashboard, not music hosting; branded under BlinkinLights Studio; cross-sell with Maestromia. Strategic/GTM/pricing/financials tracked in the **Business Claude** project, not here. Build-side obligation: keep P3 auth/config multi-tenant-capable (above).
 - **ZaraRadio / LOR S6 reliability + two-NUC strategy (STRATEGIC session required)** — ZaraRadio is the master scheduler for the entire show evening: radio stops 1 min before each show, starts 1 min after. A ZaraRadio crash breaks the whole night's timing. LOR S6 and ZaraRadio are tightly coupled — splitting them across two machines creates a sync problem on top of a reliability problem. BUTT is the only piece that cleanly moves to a separate machine. Investigate: (1) process watchdog to auto-restart ZaraRadio on crash, (2) UPS on the show NUC, (3) whether LOR S6 resource load during shows is destabilizing ZaraRadio. Full two-NUC FM architecture needs a dedicated strategic session before any hardware is purchased.
 - Playout consolidation: ZaraRadio → AzuraCast AutoDJ as single brain.
